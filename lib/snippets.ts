@@ -1,11 +1,12 @@
-type Snippet = {
+export type CatalogItem = {
   id: string;
   title: string;
   description: string;
   html: string;
+  span: { w: number; h: number };
 };
 
-export const SNIPPETS: Snippet[] = [
+export const SNIPPETS: CatalogItem[] = [
   {
     id: "header-simple",
     title: "Header",
@@ -26,6 +27,7 @@ export const SNIPPETS: Snippet[] = [
   </div>
  </header>
     `.trim(),
+    span: { w: 4, h: 1 },
   },
   {
     id: "hero-centered",
@@ -43,6 +45,7 @@ export const SNIPPETS: Snippet[] = [
   </div>
  </section>
     `.trim(),
+    span: { w: 4, h: 2 },
   },
   {
     id: "features-3col",
@@ -71,6 +74,7 @@ export const SNIPPETS: Snippet[] = [
   </div>
  </section>
     `.trim(),
+    span: { w: 4, h: 2 },
   },
   {
     id: "testimonial-simple",
@@ -92,6 +96,7 @@ export const SNIPPETS: Snippet[] = [
   </div>
  </section>
     `.trim(),
+    span: { w: 2, h: 1 },
   },
   {
     id: "pricing-3tiers",
@@ -116,6 +121,7 @@ export const SNIPPETS: Snippet[] = [
   </div>
  </section>
     `.trim(),
+    span: { w: 4, h: 2 },
   },
   {
     id: "footer-simple",
@@ -136,6 +142,7 @@ export const SNIPPETS: Snippet[] = [
   </div>
  </footer>
     `.trim(),
+    span: { w: 4, h: 1 },
   },
 ];
 

@@ -1,35 +1,50 @@
 "use client";
 
-import { Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
-import { useBuilderStore } from "@/store/useBuilderStore";
+import { Box, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
 import { SNIPPETS } from "@/lib/snippets";
+import { useDraggable } from "@dnd-kit/core";
+
+function DraggableCard({ id, title, desc, span }: { id: string; title: string; desc: string; span: { w: number; h: number } }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
+  return (
+    <Box
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      borderWidth="1px"
+      borderRadius="md"
+      p={3}
+      bg={isDragging ? "gray.50" : "white"}
+      cursor="grab"
+      userSelect="none"
+    >
+      <HStack justify="space-between" align="center">
+        <Box>
+          <Heading size="xs">{title}</Heading>
+          <Text color="gray.600" fontSize="xs">{desc}</Text>
+        </Box>
+        <Badge colorScheme="purple">{span.w}x{span.h}</Badge>
+      </HStack>
+    </Box>
+  );
+}
 
 export function LibraryColumn() {
-  const selectedZone = useBuilderStore((s) => s.selectedZone);
-  const add = useBuilderStore((s) => s.addComponentToZone);
-
   return (
     <VStack align="stretch" spacing={3}>
       <Heading size="sm">Component Library</Heading>
       <Text color="gray.600" fontSize="sm">
-        Click to add to the selected zone: <strong>{selectedZone}</strong>
+        Drag a component and drop it onto the canvas grid.
       </Text>
 
       {SNIPPETS.map((item) => (
-        <Box key={item.id} borderWidth="1px" borderRadius="md" p={3}>
-          <HStack justify="space-between" align="center">
-            <Box>
-              <Heading size="xs">{item.title}</Heading>
-              <Text color="gray.600" fontSize="xs">{item.description}</Text>
-            </Box>
-            <Button
-              size="sm"
-              onClick={() => add(selectedZone, item.html)}
-            >
-              Add
-            </Button>
-          </HStack>
-        </Box>
+        <DraggableCard
+          key={item.id}
+          id={item.id}
+          title={item.title}
+          desc={item.description}
+          span={item.span}
+        />
       ))}
     </VStack>
   );
