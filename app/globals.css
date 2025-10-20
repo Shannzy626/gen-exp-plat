@@ -1,0 +1,4 @@
+/* Global resets for the app shell; Tailwind is injected only in the iframe */
+html, body, #__next { height: 100%; }
+body { margin: 0; }
+

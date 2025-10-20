@@ -1,0 +1,19 @@
+---
+description: Guidelines for writing clean, semantic, and highly accessible HTML.
+globs: **/*.html, **/*.tsx, **/*.jsx
+---
+# Rules for Semantic & Accessible HTML
+
+## Semantics
+- **Structure Over Style**: Use HTML tags for their semantic meaning, not for their default visual appearance. Structure documents with `<main>`, `<nav>`, `<section>`, `<article>`, `<aside>`, and `<footer>`.
+- **Avoid "Divitis"**: A `<div>` or `<span>` should be your last resort. Before using one, check if a more specific semantic element exists for your purpose.
+- **Correct Heading Hierarchy**: Ensure a logical heading order (`<h1>` through `<h6>`). Each page must have exactly one `<h1>`, which should represent the main topic of the page.
+
+## Accessibility (a11y)
+- **Images Require `alt` Text**: Every `<img>` tag must have an `alt` attribute. If the image is purely decorative, provide an empty `alt=""` so screen readers can ignore it.
+- **Label All Form Controls**: All interactive form elements (`<input>`, `<textarea>`, `<select>`) must be programmatically associated with a visible `<label>` tag using the `for` attribute.
+- **Interactive Elements Must Be Focusable**: Use `<button>` for actions and `<a>` for navigation. If a non-interactive element like a `<div>` is made clickable, it must be focusable (using `tabindex="0"`) and have an appropriate `role`.
+
+## Document Standards
+- **Validate Your Code**: HTML should be well-formed and pass validation checks. Do not include block-level elements inside inline elements.
+- **Use Language Attribute**: Always declare the primary language of the document in the `<html>` tag (e.g., `<html lang="en">`) to assist search engines and screen readers.

@@ -1,0 +1,151 @@
+---
+alwaysApply: true
+---
+
+# Project "Composer" - Architectural Overview
+
+This document outlines the architecture for the Composer MVP. It details the flow of data and the responsibilities of each part of the system, from the user's browser to the final deployed website.
+
+## 1. Frontend: The User Workspace (Next.js)
+
+The frontend is a single-page application built with Next.js that provides the user's primary workspace.
+
+- **`app/page.tsx`**: This is the main entry point that renders the three-column layout.
+- **Layout Components**:
+    - `components/PromptColumn.tsx`: A stateful component containing the primary `Textarea` for user prompts and a "Generate" button. It will also hold the initial "Style Prompt" input.
+    - `components/Canvas.tsx`: A component that receives the list of generated components from the state and renders their HTML content sequentially in an `iframe` or directly, ensuring styles are properly scoped. It provides a live preview of the final website.
+    - `components/LibraryColumn.tsx`: Displays a list of the components that have been generated (e.g., "Header-v1", "Hero-v1"). It's a visual representation of the component array in our state.
+- **State Management (Zustand)**:
+    - A single store, `createAppStore`, will manage the global application state.
+    - **State Shape**:
+        ```typescript
+        interface Component {
+          id: string;
+          generationPrompt: string;
+          htmlCode: string;
+        }
+
+        interface AppState {
+          stylePrompt: string;
+          components: Component[];
+          isLoading: boolean;
+          addStylePrompt: (prompt: string) => void;
+          addComponent: (component: Component) => void;
+          setLoading: (loading: boolean) => void;
+        }
+        ```
+
+## 2. Backend Logic: The AI Gateway (Supabase Edge Function)
+
+Direct calls to the Gemini API from the client are insecure. We will use a Supabase Edge Function as a secure intermediary.
+
+- **Function Name**: `generate-component`
+- **Location**: `supabase/functions/generate-component/index.ts`
+- **Trigger**: Invoked via HTTPS request from our Next.js frontend.
+- **Logic**:
+    1.  Receives a JSON payload containing `{ stylePrompt: string, userPrompt: string, history: Component[] }`.
+    2.  Securely loads the `GEMINI_API_KEY` from environment variables.
+    3.  **Prompt Construction (The "Meta-Prompt")**: This is the core logic. The function will construct a detailed prompt for the Gemini API. This prompt will include:
+        - A system instruction defining its role (e.g., "You are an expert web developer specializing in beautiful, responsive HTML with Tailwind CSS.").
+        - The user's high-level `stylePrompt` to ensure aesthetic consistency.
+        - The user's specific `userPrompt` for the current component.
+        - Potentially, a summary of the `history` of previously generated components to maintain context.
+        - Strict instructions on the output format (raw HTML only).
+    4.  Calls the Gemini 1.5 Pro API.
+    5.  Receives the HTML response, performs basic validation/sanitization if needed.
+    6.  Returns the generated `htmlCode` as a JSON response to the frontend.
+
+## 3. Data Persistence (Supabase PostgreSQL)
+
+The frontend will be responsible for persisting the project data after a component is successfully generated.
+
+- **Workflow**:
+    1.  User starts a session. On first component generation, a new entry is created in the `projects` table using the initial `style_prompt`. The new `project_id` is stored in the Zustand store.
+    2.  After the `generate-component` function returns a new component's HTML, the frontend makes a call to the Supabase API to `INSERT` a new row into the `components` table.
+    3.  This `INSERT` includes the `project_id`, the `html_code` from the AI, the `generation_prompt` from the user, and the correct `order` (which will be `components.length`).
+
+## 4. Deployment Flow (Vercel)
+
+There are two distinct deployment processes.
+
+- **Application Deployment**: Standard CI/CD. Pushing to the `main` branch of the GitHub repo deploys the Composer web application itself to Vercel.
+- **User Site Deployment**: This is triggered by the "Publish" button.
+    1.  The button calls a new Supabase Edge Function, e.g., `publish-site`.
+    2.  This function fetches all components for the current project from the database, ordered by the `order` column.
+    3.  It concatenates the `html_code` of all components into a single string.
+    4.  It wraps this string in a standard HTML5 boilerplate, including a `<head>` section with a link to the Tailwind CSS CDN.
+    5.  It uses the Vercel REST API to create a new deployment with this single `index.html` file.
+    6.  The Vercel API returns a unique URL (e.g., `sarah-jane-photo-random-hash.vercel.app`), which is then sent back to the user.# Project "Composer" - Architectural Overview
+
+This document outlines the architecture for the Composer MVP. It details the flow of data and the responsibilities of each part of the system, from the user's browser to the final deployed website.
+
+## 1. Frontend: The User Workspace (Next.js)
+
+The frontend is a single-page application built with Next.js that provides the user's primary workspace.
+
+- **`app/page.tsx`**: This is the main entry point that renders the three-column layout.
+- **Layout Components**:
+    - `components/PromptColumn.tsx`: A stateful component containing the primary `Textarea` for user prompts and a "Generate" button. It will also hold the initial "Style Prompt" input.
+    - `components/Canvas.tsx`: A component that receives the list of generated components from the state and renders their HTML content sequentially in an `iframe` or directly, ensuring styles are properly scoped. It provides a live preview of the final website.
+    - `components/LibraryColumn.tsx`: Displays a list of the components that have been generated (e.g., "Header-v1", "Hero-v1"). It's a visual representation of the component array in our state.
+- **State Management (Zustand)**:
+    - A single store, `createAppStore`, will manage the global application state.
+    - **State Shape**:
+        ```typescript
+        interface Component {
+          id: string;
+          generationPrompt: string;
+          htmlCode: string;
+        }
+
+        interface AppState {
+          stylePrompt: string;
+          components: Component[];
+          isLoading: boolean;
+          addStylePrompt: (prompt: string) => void;
+          addComponent: (component: Component) => void;
+          setLoading: (loading: boolean) => void;
+        }
+        ```
+
+## 2. Backend Logic: The AI Gateway (Supabase Edge Function)
+
+Direct calls to the Gemini API from the client are insecure. We will use a Supabase Edge Function as a secure intermediary.
+
+- **Function Name**: `generate-component`
+- **Location**: `supabase/functions/generate-component/index.ts`
+- **Trigger**: Invoked via HTTPS request from our Next.js frontend.
+- **Logic**:
+    1.  Receives a JSON payload containing `{ stylePrompt: string, userPrompt: string, history: Component[] }`.
+    2.  Securely loads the `GEMINI_API_KEY` from environment variables.
+    3.  **Prompt Construction (The "Meta-Prompt")**: This is the core logic. The function will construct a detailed prompt for the Gemini API. This prompt will include:
+        - A system instruction defining its role (e.g., "You are an expert web developer specializing in beautiful, responsive HTML with Tailwind CSS.").
+        - The user's high-level `stylePrompt` to ensure aesthetic consistency.
+        - The user's specific `userPrompt` for the current component.
+        - Potentially, a summary of the `history` of previously generated components to maintain context.
+        - Strict instructions on the output format (raw HTML only).
+    4.  Calls the Gemini 1.5 Pro API.
+    5.  Receives the HTML response, performs basic validation/sanitization if needed.
+    6.  Returns the generated `htmlCode` as a JSON response to the frontend.
+
+## 3. Data Persistence (Supabase PostgreSQL)
+
+The frontend will be responsible for persisting the project data after a component is successfully generated.
+
+- **Workflow**:
+    1.  User starts a session. On first component generation, a new entry is created in the `projects` table using the initial `style_prompt`. The new `project_id` is stored in the Zustand store.
+    2.  After the `generate-component` function returns a new component's HTML, the frontend makes a call to the Supabase API to `INSERT` a new row into the `components` table.
+    3.  This `INSERT` includes the `project_id`, the `html_code` from the AI, the `generation_prompt` from the user, and the correct `order` (which will be `components.length`).
+
+## 4. Deployment Flow (Vercel)
+
+There are two distinct deployment processes.
+
+- **Application Deployment**: Standard CI/CD. Pushing to the `main` branch of the GitHub repo deploys the Composer web application itself to Vercel.
+- **User Site Deployment**: This is triggered by the "Publish" button.
+    1.  The button calls a new Supabase Edge Function, e.g., `publish-site`.
+    2.  This function fetches all components for the current project from the database, ordered by the `order` column.
+    3.  It concatenates the `html_code` of all components into a single string.
+    4.  It wraps this string in a standard HTML5 boilerplate, including a `<head>` section with a link to the Tailwind CSS CDN.
+    5.  It uses the Vercel REST API to create a new deployment with this single `index.html` file.
+    6.  The Vercel API returns a unique URL (e.g., `sarah-jane-photo-random-hash.vercel.app`), which is then sent back to the user.

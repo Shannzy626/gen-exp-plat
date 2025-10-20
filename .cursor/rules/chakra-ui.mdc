@@ -1,0 +1,19 @@
+---
+description: Rules for integrating Chakra UI with Next.js, focusing on component architecture, styling, and performance
+globs: **/*.ts, **/*.tsx
+---
+# Rules for Chakra UI + Next.js
+
+## Component Architecture
+- **Use Client Components for Interactivity**: Any component utilizing Chakra UI hooks (e.g., `useDisclosure`, `useColorModeValue`) or event handlers must be a Client Component. Start the file with `'use client'`.
+- **Embrace Composition**: Build complex interfaces by composing smaller, single-purpose Chakra components. Avoid creating large, monolithic components that handle too many responsibilities.
+- **Isolate State**: Keep state as local as possible. Lift state up only when multiple components need to share it, preferably through a shared parent or a lightweight state manager.
+
+## Styling and Theming
+- **Leverage the Theme**: Define all design tokens (colors, fonts, spacing, shadows) in a central `theme.ts` file. **Never** hard-code style values like hex codes directly in components.
+- **Prefer Style Props**: For styling, prioritize Chakra's built-in style props (`p`, `m`, `bg`, `w`, `color`) over the `sx` prop or custom CSS classes. They are efficient and theme-aware.
+- **Responsive Syntax is Standard**: All components must be responsive. Use Chakra's responsive array/object syntax (e.g., `width={['100%', '50%']}`) as the default method for applying styles across different breakpoints.
+
+## Performance
+- **Dynamic Imports for Heavy Components**: Use `next/dynamic` to lazy-load large Chakra components (like modals or complex data grids) that are not essential for the initial page view.
+- **Memoize When Necessary**: For components that re-render frequently with the same props, use `React.memo` to prevent unnecessary computations.

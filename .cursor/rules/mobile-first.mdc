@@ -1,0 +1,15 @@
+---
+description: Rules for implementing a mobile-first design and development methodology.
+globs: **/*.ts, **/*.tsx, **/*.css, **/*.scss
+---
+# Rules for Mobile-First Development
+
+## Foundational Approach
+- **Design for the Smallest Screen First**: All base styles must target the narrowest viewport. The user experience must be complete and functional on a mobile device without any media queries.
+- **Enhance for Larger Screens**: Use `min-width` media queries to add or modify styles for larger viewports (tablets, desktops). Avoid using `max-width` media queries, as they contradict the mobile-first principle.
+- **Content-First, Not Device-First**: Let your content determine breakpoints. Add a breakpoint when the layout starts to look cluttered or broken, not based on specific device dimensions.
+
+## Implementation Details
+- **Fluid Layouts and Typography**: Use relative units like `%`, `vw`, `vh`, and `rem` for layouts, containers, and font sizes. Avoid fixed pixel widths for major layout components.
+- **Optimize Touch Targets**: Ensure all interactive elements like buttons and links have a minimum touch target size of 44x44 pixels to be easily usable on touchscreens.
+- **Prioritize Performance**: Mobile networks can be unreliable. Aggressively optimize assets, especially images, and defer loading of non-critical resources (scripts, styles, images) to ensure a fast initial load time.

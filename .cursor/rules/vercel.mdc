@@ -1,0 +1,22 @@
+---
+description: Best practices for developing and deploying Next.js applications on the Vercel platform.
+globs: **/*.ts, **/*.tsx, **/*.js, **/*.json
+---
+# Rules for Vercel + Next.js Deployment
+
+## Environment and Configuration
+- **Manage Environment Variables in Vercel**: All secrets, API keys, and environment-specific configurations must be stored in Vercel's project settings, not committed to the repository.
+- **Use the `NEXT_PUBLIC_` Prefix for Browser Variables**: Only variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. All other variables are server-side only.
+- **Leverage Vercel Functions**: Use Serverless Functions for API routes and backend logic. Use Edge Functions for middleware and performance-critical tasks that require low latency.
+
+## Performance and Caching
+- **Use the `next/image` Component**: Always use the built-in `<Image>` component for all images. This enables Vercel's automatic image optimization, resizing, and serving via its global Edge Network.
+- **Choose the Right Rendering Strategy**:
+    - **SSG (Static Site Generation)**: The default for pages that can be pre-built at build time (e.g., marketing pages, blogs).
+    - **ISR (Incremental Static Regeneration)**: Use for pages that are static but need to be periodically updated with fresh data (e.g., e-commerce product pages).
+    - **SSR (Server-Side Rendering)**: Use for pages that require fresh data on every request (e.g., user dashboards).
+- **Control Caching Explicitly**: Understand and use Next.js Route Segment Configs (e.g., `export const revalidate = 3600`) to control Vercel's caching behavior for fetched data and rendered pages.
+
+## Development Workflow
+- **Utilize Preview Deployments**: Every pull request should generate a Vercel Preview Deployment. Review and test changes on the live preview URL before merging to production.
+- **Monitor with Vercel Analytics**: Enable Vercel's Analytics and Speed Insights to monitor your application's performance, user traffic, and Core Web Vitals in a real-world setting.
