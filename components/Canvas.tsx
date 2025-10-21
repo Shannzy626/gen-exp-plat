@@ -7,7 +7,48 @@ import { buildSrcDocGrid } from "@/lib/buildSrcDoc";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { SNIPPETS } from "@/lib/snippets";
 
-function DroppableCell({ id, onDropOver }: { id: string; onDropOver: (id: string) => void }) {
+// Calculate if a cell at (cellR, cellC) should be highlighted
+// based on hover position and component dimensions
+function shouldCellHighlight(
+  cellR: number,
+  cellC: number,
+  hoverCell: string | null,
+  componentWidth: number,
+  componentHeight: number,
+  gridRows: number,
+  gridCols: number
+): boolean {
+  if (!hoverCell) return false;
+  
+  // Parse hover cell coordinates
+  const match = /r(\d+)c(\d+)/.exec(hoverCell);
+  if (!match) return false;
+  
+  const hoverR = parseInt(match[1], 10);
+  const hoverC = parseInt(match[2], 10);
+  
+  // Clamp component placement to grid boundaries
+  const finalR = Math.min(hoverR, gridRows - componentHeight);
+  const finalC = Math.min(hoverC, gridCols - componentWidth);
+  
+  // Check if this cell falls within the component's span
+  return (
+    cellR >= finalR && 
+    cellR < finalR + componentHeight &&
+    cellC >= finalC && 
+    cellC < finalC + componentWidth
+  );
+}
+
+function DroppableCell({ 
+  id, 
+  onDropOver, 
+  shouldHighlight 
+}: { 
+  id: string; 
+  onDropOver: (id: string) => void;
+  shouldHighlight: boolean;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id });
   useEffect(() => {
     if (isOver) onDropOver(id);
@@ -16,12 +57,12 @@ function DroppableCell({ id, onDropOver }: { id: string; onDropOver: (id: string
     <Box
       ref={setNodeRef}
       borderWidth="2px"
-      borderColor={isOver ? "green.400" : "gray.300"}
+      borderColor={shouldHighlight ? "green.400" : "gray.300"}
       borderStyle="dashed"
       borderRadius="md"
       w="100%"
       h="100%"
-      bg={isOver ? "green.50" : "transparent"}
+      bg={shouldHighlight ? "green.50" : "transparent"}
       pointerEvents="auto"
     />
   );
@@ -86,6 +127,23 @@ export function Canvas() {
 
   const srcDoc = useMemo(() => buildSrcDocGrid(grid, items), [grid, items]);
 
+  // Determine component size based on what's being dragged
+  let componentW = 1;
+  let componentH = 1;
+
+  if (isDragging && dragInfo) {
+    if (dragInfo.source === "palette") {
+      const catalog = SNIPPETS.find(s => s.id === dragInfo.id);
+      if (catalog) {
+        componentW = catalog.span.w;
+        componentH = catalog.span.h;
+      }
+    } else if (dragInfo.source === "item") {
+      componentW = dragInfo.span.w;
+      componentH = dragInfo.span.h;
+    }
+  }
+
   // Drag handling moved to app/page.tsx DndContext
 
   const gridTemplate = {
@@ -101,9 +159,23 @@ export function Canvas() {
   for (let r = 0; r < grid.rows; r++) {
     for (let c = 0; c < grid.cols; c++) {
       const id = `r${r}c${c}`;
+      const shouldHighlight = shouldCellHighlight(
+        r, 
+        c, 
+        hoverCell, 
+        componentW, 
+        componentH, 
+        grid.rows, 
+        grid.cols
+      );
+      
       overlayCells.push(
         <Box key={id} gridColumn={`${c + 1} / span 1`} gridRow={`${r + 1} / span 1`}>
-          <DroppableCell id={id} onDropOver={setHoverCell} />
+          <DroppableCell 
+            id={id} 
+            onDropOver={setHoverCell} 
+            shouldHighlight={shouldHighlight}
+          />
         </Box>
       );
     }
