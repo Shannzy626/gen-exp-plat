@@ -12,13 +12,21 @@ export default function Page() {
   const placeItem = useBuilderStore((s) => s.placeItem);
 
   const sensors = useSensors(
-    useSensor(PointerSensor)
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
   );
 
   const setGlobalDragging = useBuilderStore((s) => s.setGlobalDragging);
   const clearDragInfo = useBuilderStore((s) => s.clearDragInfo);
+  const dragInfo = useBuilderStore((s) => s.dragInfo);
 
-  const handleDragStart = (_evt: DragStartEvent) => {
+  const handleDragStart = (evt: DragStartEvent) => {
+    console.log('Drag started:', evt);
+    const data = evt.active.data.current as any;
+    console.log('Drag start data:', data);
     setGlobalDragging(true);
   };
 
@@ -28,8 +36,11 @@ export default function Page() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    console.log('Drag ended:', event);
     const overId = event.over?.id as string | undefined;
     const data = (event.active.data.current || {}) as any;
+    console.log('Drag data:', data);
+    console.log('Over ID:', overId);
     if (!overId || !data) { setGlobalDragging(false); clearDragInfo(); return; }
     const match = /r(\d+)c(\d+)/.exec(overId);
     if (!match) { setGlobalDragging(false); clearDragInfo(); return; }
@@ -49,10 +60,14 @@ export default function Page() {
       const itemId: string = data.itemId;
       const w: number = data.span.w;
       const h: number = data.span.h;
+      console.log('Moving item:', itemId, 'to', r, c);
       if (r + h > rows) r = Math.max(0, rows - h);
       if (c + w > cols) c = Math.max(0, cols - w);
       if (canPlace(r, c, w, h, itemId)) {
+        console.log('Calling moveItem with:', itemId, r, c);
         useBuilderStore.getState().moveItem(itemId, r, c);
+      } else {
+        console.log('Cannot place item at', r, c);
       }
     }
     setGlobalDragging(false);
@@ -82,7 +97,13 @@ export default function Page() {
         <Box w="320px" borderLeftWidth="1px" p={4} overflowY="auto">
           <LibraryColumn />
         </Box>
-        <DragOverlay dropAnimation={null} />
+        <DragOverlay style={{ zIndex: 10 }} dropAnimation={null}>
+          {dragInfo && (
+            <Box p={2} bg="white" border="1px solid" borderColor="gray.300" borderRadius="md" boxShadow="lg">
+              Moving component...
+            </Box>
+          )}
+        </DragOverlay>
       </DndContext>
     </Flex>
   );

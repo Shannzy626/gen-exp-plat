@@ -33,30 +33,28 @@ function MoveHandle({ id, r, c, w, h }: { id: string; r: number; c: number; w: n
     data: { type: "item", itemId: id, span: { w, h } },
   });
   
+  useEffect(() => {
+    console.log('MoveHandle mounted:', id, 'isDragging:', isDragging);
+  }, [id, isDragging]);
+  
   return (
-    <Box position="absolute" top="4px" left="4px" pointerEvents="auto">
-      <Box
-        ref={setNodeRef}
-        {...listeners}
-        {...attributes}
-        borderWidth="1px"
-        borderColor={isDragging ? "purple.400" : "gray.300"}
-        bg="white"
-        borderRadius="md"
-        boxShadow="sm"
-        w="24px"
-        h="24px"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        className={`draggable-item ${isDragging ? "is-dragging" : ""}`}
-        style={{ touchAction: "none" }}
-      >
+    <IconButton
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      aria-label="Move"
+      size="xs"
+      variant="outline"
+      colorScheme="gray"
+      className={`draggable-item ${isDragging ? "is-dragging" : ""}`}
+      style={{ touchAction: "none" }}
+      onClick={() => console.log('MoveHandle clicked:', id)}
+      icon={
         <Icon viewBox="0 0 24 24" boxSize="3.5">
           <path fill="currentColor" d="M7 4h2v2H7V4m8 0h2v2h-2V4M7 18h2v2H7v-2m8 0h2v2h-2v-2M4 7h2v2H4V7m14 0h2v2h-2V7M4 15h2v2H4v-2m14 0h2v2h-2v-2"/>
         </Icon>
-      </Box>
-    </Box>
+      }
+    />
   );
 }
 
@@ -73,12 +71,20 @@ export function Canvas() {
   const clearDragInfo = useBuilderStore((s) => s.clearDragInfo);
 
   const [hoverCell, setHoverCell] = useState<string | null>(null);
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   // Clean up drag state when dragging ends
   useEffect(() => {
     if (!isDragging) {
       setHoverCell(null);
+    }
+  }, [isDragging]);
+
+  // Clean up hover state when dragging starts
+  useEffect(() => {
+    if (isDragging) {
+      setHoveredItemId(null);
     }
   }, [isDragging]);
 
@@ -107,37 +113,6 @@ export function Canvas() {
     }
   }
 
-  // Controls overlay: delete + move-handle per item
-  const controlsOverlay = items.map((it) => (
-    <Box
-      key={`ctrl-${it.id}`}
-      gridColumn={`${it.c + 1} / span ${it.w}`}
-      gridRow={`${it.r + 1} / span ${it.h}`}
-      position="relative"
-      pointerEvents="none"
-      opacity={0}
-      _hover={{ opacity: 1, pointerEvents: "auto" }}
-      transition="opacity 0.2s"
-    >
-      <MoveHandle id={it.id} r={it.r} c={it.c} w={it.w} h={it.h} />
-      <Box position="absolute" top="4px" right="4px" pointerEvents="auto">
-        <Tooltip label="Remove" openDelay={300}>
-          <IconButton
-            aria-label="Remove"
-            size="xs"
-            variant="solid"
-            colorScheme="red"
-            onClick={(e) => { e.stopPropagation(); removeItem(it.id); }}
-            icon={
-              <Icon viewBox="0 0 24 24" boxSize="3.5">
-                <path fill="currentColor" d="M18.3 5.71L12 12.01l-6.3-6.3-1.4 1.42 6.29 6.29-6.3 6.29 1.42 1.41 6.29-6.29 6.29 6.29 1.41-1.41-6.29-6.29 6.3-6.3-1.42-1.42z"/>
-              </Icon>
-            }
-          />
-        </Tooltip>
-      </Box>
-    </Box>
-  ));
 
   const [rowsInput, setRowsInput] = useState(grid.rows.toString());
   const [colsInput, setColsInput] = useState(grid.cols.toString());
@@ -186,9 +161,59 @@ export function Canvas() {
             </Box>
           )}
           
-          {/* Layer 3: Control handles - small positioned elements */}
-          <Box position="absolute" inset={0} zIndex={3} pointerEvents="none" style={gridTemplate}>
-            {controlsOverlay}
+          {/* Layer 3: Minimal hover detection + controls */}
+          <Box position="absolute" inset={0} zIndex={3} style={gridTemplate} pointerEvents="none">
+            {items.map(item => (
+              <Box
+                key={`interact-${item.id}`}
+                gridColumn={`${item.c + 1} / span ${item.w}`}
+                gridRow={`${item.r + 1} / span ${item.h}`}
+                position="relative"
+                pointerEvents="none"
+              >
+                {/* Minimal hover detection - ONLY in top-right corner where controls appear */}
+                <Box
+                  position="absolute"
+                  top={0}
+                  right={0}
+                  width="80px"
+                  height="36px"
+                  pointerEvents="auto"
+                  onMouseEnter={() => setHoveredItemId(item.id)}
+                  onMouseLeave={() => setHoveredItemId(null)}
+                  bg="transparent"
+                />
+                
+                {/* Controls - visible when hovered OR if this item is being dragged */}
+                {(hoveredItemId === item.id || (isDragging && dragInfo?.id === item.id)) && (
+                  <HStack 
+                    position="absolute" 
+                    top="4px" 
+                    right="4px" 
+                    spacing={1} 
+                    pointerEvents="auto"
+                    onMouseEnter={() => setHoveredItemId(item.id)}
+                    zIndex={1}
+                  >
+                    <MoveHandle id={item.id} r={item.r} c={item.c} w={item.w} h={item.h} />
+                    <Tooltip label="Remove" openDelay={300}>
+                      <IconButton
+                        aria-label="Remove"
+                        size="xs"
+                        variant="solid"
+                        colorScheme="red"
+                        onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                        icon={
+                          <Icon viewBox="0 0 24 24" boxSize="3.5">
+                            <path fill="currentColor" d="M18.3 5.71L12 12.01l-6.3-6.3-1.4 1.42 6.29 6.29-6.3 6.29 1.42 1.41 6.29-6.29 6.29 6.29 1.41-1.41-6.29-6.29 6.3-6.3-1.42-1.42z"/>
+                          </Icon>
+                        }
+                      />
+                    </Tooltip>
+                  </HStack>
+                )}
+              </Box>
+            ))}
           </Box>
       </Box>
     </Flex>
