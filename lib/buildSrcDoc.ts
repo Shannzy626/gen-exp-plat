@@ -4,7 +4,19 @@ export function buildSrcDocGrid(grid: GridSize, items: PlacedItem[]) {
   const rendered = items
     .map(
       (it) =>
-        `<div style="grid-column: ${it.c + 1} / span ${it.w}; grid-row: ${it.r + 1} / span ${it.h};">${it.html}</div>`
+        `<div style="
+          grid-column: ${it.c + 1} / span ${it.w}; 
+          grid-row: ${it.r + 1} / span ${it.h}; 
+          height: 100%; 
+          width: 100%; 
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        ">
+          <div style="width: 100%; height: 100%; overflow-y: auto; display: flex; flex-direction: column;">
+            ${it.html}
+          </div>
+        </div>`
     )
     .join("\n");
 
