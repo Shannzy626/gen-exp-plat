@@ -33,9 +33,6 @@ function MoveHandle({ id, r, c, w, h }: { id: string; r: number; c: number; w: n
     data: { type: "item", itemId: id, span: { w, h } },
   });
   
-  useEffect(() => {
-    console.log('MoveHandle mounted:', id, 'isDragging:', isDragging);
-  }, [id, isDragging]);
   
   return (
     <IconButton
@@ -183,34 +180,33 @@ export function Canvas() {
                   bg="transparent"
                 />
                 
-                {/* Controls - visible when hovered OR if this item is being dragged */}
-                {(hoveredItemId === item.id || (isDragging && dragInfo?.id === item.id)) && (
-                  <HStack 
-                    position="absolute" 
-                    top="4px" 
-                    right="4px" 
-                    spacing={1} 
-                    pointerEvents="auto"
-                    onMouseEnter={() => setHoveredItemId(item.id)}
-                    zIndex={1}
-                  >
-                    <MoveHandle id={item.id} r={item.r} c={item.c} w={item.w} h={item.h} />
-                    <Tooltip label="Remove" openDelay={300}>
-                      <IconButton
-                        aria-label="Remove"
-                        size="xs"
-                        variant="solid"
-                        colorScheme="red"
-                        onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
-                        icon={
-                          <Icon viewBox="0 0 24 24" boxSize="3.5">
-                            <path fill="currentColor" d="M18.3 5.71L12 12.01l-6.3-6.3-1.4 1.42 6.29 6.29-6.3 6.29 1.42 1.41 6.29-6.29 6.29 6.29 1.41-1.41-6.29-6.29 6.3-6.3-1.42-1.42z"/>
-                          </Icon>
-                        }
-                      />
-                    </Tooltip>
-                  </HStack>
-                )}
+                        {/* Controls - always rendered, visibility controlled by CSS */}
+                        <HStack 
+                          position="absolute" 
+                          top="4px" 
+                          right="4px" 
+                          spacing={1} 
+                          pointerEvents={hoveredItemId === item.id ? "auto" : "none"}
+                          visibility={hoveredItemId === item.id ? "visible" : "hidden"}
+                          onMouseEnter={() => setHoveredItemId(item.id)}
+                          zIndex={1}
+                        >
+                          <MoveHandle id={item.id} r={item.r} c={item.c} w={item.w} h={item.h} />
+                          <Tooltip label="Remove" openDelay={300}>
+                            <IconButton
+                              aria-label="Remove"
+                              size="xs"
+                              variant="solid"
+                              colorScheme="red"
+                              onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                              icon={
+                                <Icon viewBox="0 0 24 24" boxSize="3.5">
+                                  <path fill="currentColor" d="M18.3 5.71L12 12.01l-6.3-6.3-1.4 1.42 6.29 6.29-6.3 6.29 1.42 1.41 6.29-6.29 6.29 6.29 1.41-1.41-6.29-6.29 6.3-6.3-1.42-1.42z"/>
+                                </Icon>
+                              }
+                            />
+                          </Tooltip>
+                        </HStack>
               </Box>
             ))}
           </Box>

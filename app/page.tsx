@@ -24,7 +24,6 @@ export default function Page() {
   const dragInfo = useBuilderStore((s) => s.dragInfo);
 
   const handleDragStart = (evt: DragStartEvent) => {
-    console.log('✓ Drag started:', evt.active.id);
     setGlobalDragging(true);
   };
 
@@ -64,10 +63,9 @@ export default function Page() {
       }
       if (r + catalog.span.h > rows) r = Math.max(0, rows - catalog.span.h);
       if (c + catalog.span.w > cols) c = Math.max(0, cols - catalog.span.w);
-      if (canPlace(r, c, catalog.span.w, catalog.span.h)) {
-        placeItem(catalog, r, c);
-        console.log('✓ Placed:', catalog.id, 'at', r, c);
-      }
+              if (canPlace(r, c, catalog.span.w, catalog.span.h)) {
+                placeItem(catalog, r, c);
+              }
     } else if (data.type === "item") {
       const itemId: string = data.itemId;
       const w: number = data.span.w;
@@ -76,7 +74,6 @@ export default function Page() {
       if (c + w > cols) c = Math.max(0, cols - w);
       if (canPlace(r, c, w, h, itemId)) {
         useBuilderStore.getState().moveItem(itemId, r, c);
-        console.log('✓ Moved:', itemId, 'to', r, c);
       }
     }
     
