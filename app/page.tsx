@@ -21,10 +21,33 @@ export default function Page() {
 
   const setGlobalDragging = useBuilderStore((s) => s.setGlobalDragging);
   const clearDragInfo = useBuilderStore((s) => s.clearDragInfo);
+  const setDragInfo = useBuilderStore((s) => s.setDragInfo);
   const dragInfo = useBuilderStore((s) => s.dragInfo);
 
   const handleDragStart = (evt: DragStartEvent) => {
     setGlobalDragging(true);
+    
+    // Extract component information from drag event
+    const data = evt.active.data.current as any;
+    
+    if (data?.type === "catalog") {
+      // Dragging from library
+      const catalog = SNIPPETS.find((s) => s.id === data.catalogId);
+      if (catalog) {
+        setDragInfo({
+          source: "palette",
+          id: catalog.id,
+          span: { w: catalog.span.w, h: catalog.span.h }
+        });
+      }
+    } else if (data?.type === "item") {
+      // Moving existing item
+      setDragInfo({
+        source: "item",
+        id: data.itemId,
+        span: { w: data.span.w, h: data.span.h }
+      });
+    }
   };
 
   const handleDragCancel = (_evt: DragCancelEvent) => {
