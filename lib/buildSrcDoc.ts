@@ -7,40 +7,36 @@ const BASELINE_GRID = {
 } as const;
 
 const SCALE_CONFIG = {
-  MIN_FONT_SIZE: 0.6,  // Minimum readable font size in rem
-  BASE_FONT_SIZE: 1.0, // Standard font size in rem
+  MIN_FONT_SIZE: 0.6,      // Minimum scale factor (60% of normal)
+  BASE_FONT_SIZE: 1.0,     // Normal scale factor (100%)
+  BASE_PX_SIZE: 16,        // Browser default font size in pixels
 } as const;
 
 /**
- * Calculates responsive base font size based on grid density
- * Font size decreases as grid becomes denser to prevent content overflow
+ * Calculates responsive scale factor based on grid density
+ * Scale factor decreases as grid becomes denser
  * @param gridRows - Current number of grid rows
- * @returns Font size in rem units, constrained to minimum readable size
+ * @returns Scale factor constrained to minimum readable size
  */
-function calculateBaseFontSize(gridRows: number): number {
+function calculateScaleFactor(gridRows: number): number {
   const scaleFactor = BASELINE_GRID.ROWS / gridRows;
-  const calculatedSize = SCALE_CONFIG.BASE_FONT_SIZE * scaleFactor;
-  return Math.max(SCALE_CONFIG.MIN_FONT_SIZE, calculatedSize);
+  return Math.max(SCALE_CONFIG.MIN_FONT_SIZE, scaleFactor);
 }
 
 /**
- * Generates CSS for responsive scaling based on grid size
+ * Generates CSS for responsive scaling
+ * Scales the root html font-size so all rem-based units scale automatically
  * @param grid - Grid dimensions (rows and columns)
- * @returns CSS string for responsive typography and spacing
+ * @returns CSS string for responsive scaling
  */
 function generateScalingCSS(grid: GridSize): string {
-  const baseFontSize = calculateBaseFontSize(grid.rows);
-  const spacingScale = BASELINE_GRID.ROWS / grid.rows;
+  const scaleFactor = calculateScaleFactor(grid.rows);
+  const rootFontSize = scaleFactor * SCALE_CONFIG.BASE_PX_SIZE;
   
   return `
-    /* Responsive scaling based on grid density */
-    body {
-      font-size: ${baseFontSize}rem;
-    }
-    
-    /* Scale spacing proportionally to prevent overflow */
-    .grid > div {
-      --spacing-scale: ${spacingScale};
+    /* Scale root font-size - all rem units scale automatically */
+    html {
+      font-size: ${rootFontSize}px;
     }
   `.trim();
 }
