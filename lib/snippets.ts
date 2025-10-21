@@ -6,6 +6,14 @@ export type CatalogItem = {
   span: { w: number; h: number };
 };
 
+// Padding constants for better maintainability and consistent scaling
+const PADDING = {
+  SECTION_VERTICAL: 'py-8',    // Reduced from py-16 for better scaling
+  SECTION_HORIZONTAL: 'px-4',
+  CARD: 'p-6',
+  CARD_LARGE: 'p-8',
+} as const;
+
 export const SNIPPETS: CatalogItem[] = [
   {
     id: "header-simple",
@@ -82,9 +90,9 @@ export const SNIPPETS: CatalogItem[] = [
     description: "Single testimonial card",
     html: `
 <section class="w-full">
-  <div class="mx-auto max-w-3xl px-4 py-16">
-    <div class="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-      <p class="text-lg text-gray-900">“This builder made prototyping our marketing site a breeze.”</p>
+  <div class="mx-auto max-w-3xl ${PADDING.SECTION_HORIZONTAL} ${PADDING.SECTION_VERTICAL}">
+    <div class="rounded-xl border border-gray-200 bg-white ${PADDING.CARD_LARGE} shadow-sm">
+      <p class="text-lg text-gray-900">"This builder made prototyping our marketing site a breeze."</p>
       <div class="mt-4 flex items-center gap-3">
         <div class="h-8 w-8 rounded-full bg-indigo-600"></div>
         <div>

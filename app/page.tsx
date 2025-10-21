@@ -87,12 +87,7 @@ export default function Page() {
       if (r + catalog.span.h > rows) r = Math.max(0, rows - catalog.span.h);
       if (c + catalog.span.w > cols) c = Math.max(0, cols - catalog.span.w);
               if (canPlace(r, c, catalog.span.w, catalog.span.h)) {
-                console.log('Placing component:', catalog.id, 'with span:', catalog.span);
                 placeItem(catalog, r, c);
-                // Debug: Check what was actually stored
-                const items = useBuilderStore.getState().items;
-                const lastItem = items[items.length - 1];
-                console.log('Stored item:', lastItem);
               }
     } else if (data.type === "item") {
       const itemId: string = data.itemId;

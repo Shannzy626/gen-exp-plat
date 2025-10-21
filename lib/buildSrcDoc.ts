@@ -1,23 +1,49 @@
 import type { GridSize, PlacedItem } from "@/store/useBuilderStore";
 
-export function buildSrcDocGrid(grid: GridSize, items: PlacedItem[]) {
+/**
+ * Generates inline styles for a grid item wrapper
+ * Ensures components scale properly within their allocated grid cells
+ */
+function getGridItemWrapperStyles(item: PlacedItem): string {
+  return `
+    grid-column: ${item.c + 1} / span ${item.w}; 
+    grid-row: ${item.r + 1} / span ${item.h}; 
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    overflow: hidden;
+  `.trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Generates inline styles for the inner content wrapper
+ * Allows scrolling if content exceeds available space
+ */
+function getContentWrapperStyles(): string {
+  return `
+    width: 100%; 
+    height: 100%; 
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  `.trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Builds the complete HTML document for the iframe preview
+ * @param grid - Grid dimensions (rows and columns)
+ * @param items - Array of placed components with their positions
+ * @returns Complete HTML document string
+ */
+export function buildSrcDocGrid(grid: GridSize, items: PlacedItem[]): string {
   const rendered = items
-    .map(
-      (it) =>
-        `<div style="
-          grid-column: ${it.c + 1} / span ${it.w}; 
-          grid-row: ${it.r + 1} / span ${it.h}; 
-          height: 100%; 
-          width: 100%; 
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        ">
-          <div style="width: 100%; height: 100%; overflow-y: auto; display: flex; flex-direction: column;">
-            ${it.html}
-          </div>
-        </div>`
-    )
+    .map((item) => `
+      <div style="${getGridItemWrapperStyles(item)}">
+        <div style="${getContentWrapperStyles()}">
+          ${item.html}
+        </div>
+      </div>
+    `.trim())
     .join("\n");
 
   return `<!doctype html>
