@@ -48,7 +48,6 @@ function MoveHandle({ id, r, c, w, h }: { id: string; r: number; c: number; w: n
       colorScheme="gray"
       className={`draggable-item ${isDragging ? "is-dragging" : ""}`}
       style={{ touchAction: "none" }}
-      onClick={() => console.log('MoveHandle clicked:', id)}
       icon={
         <Icon viewBox="0 0 24 24" boxSize="3.5">
           <path fill="currentColor" d="M7 4h2v2H7V4m8 0h2v2h-2V4M7 18h2v2H7v-2m8 0h2v2h-2v-2M4 7h2v2H4V7m14 0h2v2h-2V7M4 15h2v2H4v-2m14 0h2v2h-2v-2"/>

@@ -24,9 +24,7 @@ export default function Page() {
   const dragInfo = useBuilderStore((s) => s.dragInfo);
 
   const handleDragStart = (evt: DragStartEvent) => {
-    console.log('Drag started:', evt);
-    const data = evt.active.data.current as any;
-    console.log('Drag start data:', data);
+    console.log('✓ Drag started:', evt.active.id);
     setGlobalDragging(true);
   };
 
@@ -36,40 +34,52 @@ export default function Page() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    console.log('Drag ended:', event);
     const overId = event.over?.id as string | undefined;
     const data = (event.active.data.current || {}) as any;
-    console.log('Drag data:', data);
-    console.log('Over ID:', overId);
-    if (!overId || !data) { setGlobalDragging(false); clearDragInfo(); return; }
+    
+    if (!overId || !data) { 
+      setGlobalDragging(false); 
+      clearDragInfo(); 
+      return; 
+    }
+    
     const match = /r(\d+)c(\d+)/.exec(overId);
-    if (!match) { setGlobalDragging(false); clearDragInfo(); return; }
+    if (!match) { 
+      setGlobalDragging(false); 
+      clearDragInfo(); 
+      return; 
+    }
+    
     let r = parseInt(match[1], 10);
     let c = parseInt(match[2], 10);
     const rows = useBuilderStore.getState().grid.rows;
     const cols = useBuilderStore.getState().grid.cols;
+    
     if (data.type === "catalog") {
       const catalog = SNIPPETS.find((s) => s.id === data.catalogId);
-      if (!catalog) { setGlobalDragging(false); clearDragInfo(); return; }
+      if (!catalog) { 
+        setGlobalDragging(false); 
+        clearDragInfo(); 
+        return; 
+      }
       if (r + catalog.span.h > rows) r = Math.max(0, rows - catalog.span.h);
       if (c + catalog.span.w > cols) c = Math.max(0, cols - catalog.span.w);
       if (canPlace(r, c, catalog.span.w, catalog.span.h)) {
         placeItem(catalog, r, c);
+        console.log('✓ Placed:', catalog.id, 'at', r, c);
       }
     } else if (data.type === "item") {
       const itemId: string = data.itemId;
       const w: number = data.span.w;
       const h: number = data.span.h;
-      console.log('Moving item:', itemId, 'to', r, c);
       if (r + h > rows) r = Math.max(0, rows - h);
       if (c + w > cols) c = Math.max(0, cols - w);
       if (canPlace(r, c, w, h, itemId)) {
-        console.log('Calling moveItem with:', itemId, r, c);
         useBuilderStore.getState().moveItem(itemId, r, c);
-      } else {
-        console.log('Cannot place item at', r, c);
+        console.log('✓ Moved:', itemId, 'to', r, c);
       }
     }
+    
     setGlobalDragging(false);
     clearDragInfo();
   };
