@@ -6,13 +6,19 @@ export type CatalogItem = {
   span: { w: number; h: number };
 };
 
-// Padding constants for better maintainability and consistent scaling
+// Padding constants optimized for responsive scaling
 const PADDING = {
-  SECTION_VERTICAL: 'py-8',    // Reduced from py-16 for better scaling
-  SECTION_HORIZONTAL: 'px-4',
-  CARD: 'p-6',
-  CARD_LARGE: 'p-8',
+  // Vertical padding reduced for better grid scaling
+  SECTION_VERTICAL: 'py-4',     // 1rem top/bottom
+  SECTION_HORIZONTAL: 'px-3',   // 0.75rem left/right
+  
+  // Card padding scaled appropriately
+  CARD: 'p-4',                   // 1rem all sides
+  CARD_LARGE: 'p-6',             // 1.5rem all sides (reduced from p-8)
 } as const;
+
+// Type-safe access to padding values
+type PaddingKey = keyof typeof PADDING;
 
 export const SNIPPETS: CatalogItem[] = [
   {
