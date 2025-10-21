@@ -129,8 +129,22 @@ export default function Page() {
         </Box>
         <DragOverlay style={{ zIndex: 10 }} dropAnimation={null}>
           {dragInfo && (
-            <Box p={2} bg="white" border="1px solid" borderColor="gray.300" borderRadius="md" boxShadow="lg">
-              Moving component...
+            <Box 
+              p={4} 
+              py={3}
+              bg="white" 
+              border="1px solid" 
+              borderColor="gray.300" 
+              borderRadius="md" 
+              boxShadow="lg"
+              minH="40px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                Moving component...
+              </Text>
             </Box>
           )}
         </DragOverlay>
