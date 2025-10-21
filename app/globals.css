@@ -2,3 +2,18 @@
 html, body, #__next { height: 100%; }
 body { margin: 0; }
 
+/* Cursor management for drag operations */
+.draggable-item {
+  cursor: grab;
+}
+
+.draggable-item.is-dragging,
+.draggable-item:active {
+  cursor: grabbing !important;
+}
+
+/* Global cursor override during any drag operation */
+body.is-dragging * {
+  cursor: grabbing !important;
+}
+

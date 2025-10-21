@@ -3,7 +3,7 @@
 import { Box, Flex, Heading, VStack, Text, Divider } from "@chakra-ui/react";
 import { Canvas } from "@/components/Canvas";
 import { LibraryColumn } from "@/components/LibraryColumn";
-import { DndContext, DragEndEvent, MouseSensor, TouchSensor, KeyboardSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragStartEvent, DragCancelEvent, PointerSensor, DragOverlay, useSensor, useSensors } from "@dnd-kit/core";
 import { SNIPPETS } from "@/lib/snippets";
 import { useBuilderStore } from "@/store/useBuilderStore";
 
@@ -12,28 +12,51 @@ export default function Page() {
   const placeItem = useBuilderStore((s) => s.placeItem);
 
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor)
+    useSensor(PointerSensor)
   );
+
+  const setGlobalDragging = useBuilderStore((s) => s.setGlobalDragging);
+  const clearDragInfo = useBuilderStore((s) => s.clearDragInfo);
+
+  const handleDragStart = (_evt: DragStartEvent) => {
+    setGlobalDragging(true);
+  };
+
+  const handleDragCancel = (_evt: DragCancelEvent) => {
+    setGlobalDragging(false);
+    clearDragInfo();
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const overId = event.over?.id as string | undefined;
-    const activeId = String(event.active.id);
-    const catalog = SNIPPETS.find((s) => s.id === activeId);
-    if (!catalog || !overId) return;
+    const data = (event.active.data.current || {}) as any;
+    if (!overId || !data) { setGlobalDragging(false); clearDragInfo(); return; }
     const match = /r(\d+)c(\d+)/.exec(overId);
-    if (!match) return;
+    if (!match) { setGlobalDragging(false); clearDragInfo(); return; }
     let r = parseInt(match[1], 10);
     let c = parseInt(match[2], 10);
-    // Auto-clamp to keep the component in bounds by shifting top-left if needed
     const rows = useBuilderStore.getState().grid.rows;
     const cols = useBuilderStore.getState().grid.cols;
-    if (r + catalog.span.h > rows) r = Math.max(0, rows - catalog.span.h);
-    if (c + catalog.span.w > cols) c = Math.max(0, cols - catalog.span.w);
-    if (canPlace(r, c, catalog.span.w, catalog.span.h)) {
-      placeItem(catalog, r, c);
+    if (data.type === "catalog") {
+      const catalog = SNIPPETS.find((s) => s.id === data.catalogId);
+      if (!catalog) { setGlobalDragging(false); clearDragInfo(); return; }
+      if (r + catalog.span.h > rows) r = Math.max(0, rows - catalog.span.h);
+      if (c + catalog.span.w > cols) c = Math.max(0, cols - catalog.span.w);
+      if (canPlace(r, c, catalog.span.w, catalog.span.h)) {
+        placeItem(catalog, r, c);
+      }
+    } else if (data.type === "item") {
+      const itemId: string = data.itemId;
+      const w: number = data.span.w;
+      const h: number = data.span.h;
+      if (r + h > rows) r = Math.max(0, rows - h);
+      if (c + w > cols) c = Math.max(0, cols - w);
+      if (canPlace(r, c, w, h, itemId)) {
+        useBuilderStore.getState().moveItem(itemId, r, c);
+      }
     }
+    setGlobalDragging(false);
+    clearDragInfo();
   };
 
   return (
@@ -51,7 +74,7 @@ export default function Page() {
         </VStack>
       </Box>
 
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragCancel={handleDragCancel} onDragEnd={handleDragEnd}>
         <Box flex="1" p={0}>
           <Canvas />
         </Box>
@@ -59,6 +82,7 @@ export default function Page() {
         <Box w="320px" borderLeftWidth="1px" p={4} overflowY="auto">
           <LibraryColumn />
         </Box>
+        <DragOverlay dropAnimation={null} />
       </DndContext>
     </Flex>
   );

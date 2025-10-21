@@ -5,7 +5,8 @@ import { SNIPPETS } from "@/lib/snippets";
 import { useDraggable } from "@dnd-kit/core";
 
 function DraggableCard({ id, title, desc, span }: { id: string; title: string; desc: string; span: { w: number; h: number } }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id, data: { type: "catalog", catalogId: id, span } });
+  
   return (
     <Box
       ref={setNodeRef}
@@ -15,8 +16,9 @@ function DraggableCard({ id, title, desc, span }: { id: string; title: string; d
       borderRadius="md"
       p={3}
       bg={isDragging ? "gray.50" : "white"}
-      cursor="grab"
+      className={`draggable-item ${isDragging ? "is-dragging" : ""}`}
       userSelect="none"
+      style={{ touchAction: "none" }}
     >
       <HStack justify="space-between" align="center">
         <Box>
